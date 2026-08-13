@@ -1,0 +1,139 @@
+<svg width="1050" height="1240" viewBox="0 0 1050 1240" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Why 3 timers: the role of TIM3, TIM6, and TIM4 and how they overlap</title>
+<desc>TIM6 (owned by main.c) fires an Update interrupt every 60ms that calls Sensor_Trigger(). TIM3 (owned by sensor.c) is a free-running 1-microsecond clock reused twice: once to time the 10-microsecond Trig pulse, and again to timestamp both edges of the Echo pulse — this is the shared, overlapping resource. TIM4 (owned by main.c) only receives the final duty value once per cycle and then runs the 1kHz LED PWM independently in hardware.</desc>
+<rect width="1050" height="1240" fill="#ffffff"/>
+
+<text x="500" y="30" text-anchor="middle" font-family="sans-serif" font-size="16" font-weight="700" fill="#1a1a1a">Programming Logic</text>
+
+<!-- ============ Row 1: three role cards ============ -->
+<rect x="30" y="50" width="300" height="150" rx="8" fill="#eaf1ff" stroke="#2f6fed" stroke-width="1.5"/>
+<text x="50" y="76" font-family="sans-serif" font-size="13.5" font-weight="700" fill="#2f6fed">TIM6 — 60ms scheduler</text>
+<text x="50" y="94" font-family="sans-serif" font-size="10" fill="#555555">owned by: main.c</text>
+<text x="50" y="116" font-family="sans-serif" font-size="10.5" fill="#1a1a1a">• Only fires an Update interrupt every</text>
+<text x="60" y="132" font-family="sans-serif" font-size="10.5" fill="#1a1a1a">60ms — drives no pin at all</text>
+<text x="50" y="152" font-family="sans-serif" font-size="10.5" fill="#1a1a1a">• Calls Sensor_Trigger() from that</text>
+<text x="60" y="168" font-family="sans-serif" font-size="10.5" fill="#1a1a1a">interrupt callback</text>
+<text x="50" y="188" font-family="sans-serif" font-size="10.5" fill="#1a1a1a">• Paces measurements to what the sensor allows</text>
+
+<rect x="350" y="50" width="300" height="150" rx="8" fill="#fff4e5" stroke="#d97706" stroke-width="1.5"/>
+<text x="370" y="76" font-family="sans-serif" font-size="13.5" font-weight="700" fill="#d97706">TIM3 — shared 1µs clock</text>
+<text x="370" y="94" font-family="sans-serif" font-size="10" fill="#555555">owned by: sensor.c</text>
+<text x="370" y="116" font-family="sans-serif" font-size="10.5" fill="#1a1a1a">• Free-running, never reset, no</text>
+<text x="380" y="132" font-family="sans-serif" font-size="10.5" fill="#1a1a1a">interrupt of its own</text>
+<text x="370" y="152" font-family="sans-serif" font-size="10.5" font-weight="700" fill="#d97706">• Used TWICE per cycle — see ① and ②</text>
+<text x="380" y="168" font-family="sans-serif" font-size="10.5" fill="#1a1a1a">below — the timer the other two share</text>
+<text x="370" y="188" font-family="sans-serif" font-size="10.5" fill="#1a1a1a">• The piece that makes timing possible</text>
+
+<rect x="670" y="50" width="300" height="150" rx="8" fill="#f3ecff" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="690" y="76" font-family="sans-serif" font-size="13.5" font-weight="700" fill="#7c3aed">TIM4 CH1 — PWM output</text>
+<text x="690" y="94" font-family="sans-serif" font-size="10" fill="#555555">owned by: main.c</text>
+<text x="690" y="116" font-family="sans-serif" font-size="10.5" fill="#1a1a1a">• Not involved in measuring anything</text>
+<text x="690" y="136" font-family="sans-serif" font-size="10.5" fill="#1a1a1a">• Only receives the final duty value,</text>
+<text x="700" y="152" font-family="sans-serif" font-size="10.5" fill="#1a1a1a">once per cycle</text>
+<text x="690" y="172" font-family="sans-serif" font-size="10.5" fill="#1a1a1a">• Hardware then free-runs the 1kHz PWM</text>
+<text x="700" y="188" font-family="sans-serif" font-size="10.5" fill="#1a1a1a">on its own — no further CPU input needed</text>
+
+<!-- ============ Row 2: 7-step pipeline ============ -->
+<text x="500" y="232" text-anchor="middle" font-family="sans-serif" font-size="12" font-style="italic" fill="#777777">One measurement cycle, in order — colored bar on the left shows which timer is involved</text>
+
+<!-- S1 -->
+<rect x="200" y="250" width="8" height="90" fill="#2f6fed"/>
+<rect x="208" y="250" width="592" height="90" fill="#f8f9fb" stroke="#cccccc" stroke-width="1"/>
+<rect x="700" y="258" width="86" height="20" rx="10" fill="#2f6fed"/>
+<text x="743" y="272" text-anchor="middle" font-family="monospace" font-size="10" fill="#ffffff">TIM6</text>
+<text x="228" y="280" font-family="sans-serif" font-size="12" font-weight="700" fill="#1a1a1a">1. TIM6 Update interrupt fires (every 60ms)</text>
+<text x="228" y="302" font-family="monospace" font-size="11" fill="#1a1a1a">HAL_TIM_PeriodElapsedCallback() → Sensor_Trigger()</text>
+<text x="228" y="322" font-family="sans-serif" font-size="10" fill="#777777">main.c decides WHEN to measure — sensor.c doesn't know about 60ms at all</text>
+
+<line x1="500" y1="340" x2="500" y2="368" stroke="#1a1a1a" stroke-width="1.5"/>
+<polygon points="500,368 495,358 505,358" fill="#1a1a1a"/>
+
+<!-- S2 -->
+<rect x="200" y="378" width="8" height="90" fill="#d97706"/>
+<rect x="208" y="378" width="592" height="90" fill="#f8f9fb" stroke="#cccccc" stroke-width="1"/>
+<rect x="700" y="386" width="98" height="20" rx="10" fill="#d97706"/>
+<text x="749" y="400" text-anchor="middle" font-family="monospace" font-size="10" fill="#ffffff">TIM3 ①</text>
+<text x="228" y="408" font-family="sans-serif" font-size="12" font-weight="700" fill="#1a1a1a">2. Sensor_Trigger(): delay_us(10) busy-waits on TIM3</text>
+<text x="228" y="430" font-family="monospace" font-size="11" fill="#1a1a1a">TRIG pin held HIGH for exactly 10µs, then LOW</text>
+<text x="228" y="450" font-family="sans-serif" font-size="10" fill="#777777">first use of TIM3 this cycle — just needs its CNT to count time</text>
+
+<line x1="500" y1="468" x2="500" y2="496" stroke="#1a1a1a" stroke-width="1.5"/>
+<polygon points="500,496 495,486 505,486" fill="#1a1a1a"/>
+
+<!-- S3 (no timer) -->
+<rect x="200" y="506" width="8" height="90" fill="#9ca3af"/>
+<rect x="208" y="506" width="592" height="90" fill="#f8f9fb" stroke="#cccccc" stroke-width="1"/>
+<rect x="700" y="514" width="98" height="20" rx="10" fill="#9ca3af"/>
+<text x="749" y="528" text-anchor="middle" font-family="monospace" font-size="10" fill="#ffffff">sensor HW</text>
+<text x="228" y="536" font-family="sans-serif" font-size="12" font-weight="700" fill="#1a1a1a">3. HC-SR04 emits an 8-cycle ultrasonic burst</text>
+<text x="228" y="558" font-family="monospace" font-size="11" fill="#1a1a1a">ECHO pin goes HIGH and stays HIGH for time T</text>
+<text x="228" y="578" font-family="sans-serif" font-size="10" fill="#777777">purely physical — no MCU timer involved yet</text>
+
+<line x1="500" y1="596" x2="500" y2="624" stroke="#1a1a1a" stroke-width="1.5"/>
+<polygon points="500,624 495,614 505,614" fill="#1a1a1a"/>
+
+<!-- S4 -->
+<rect x="200" y="634" width="8" height="90" fill="#d97706"/>
+<rect x="208" y="634" width="592" height="90" fill="#f8f9fb" stroke="#cccccc" stroke-width="1"/>
+<rect x="700" y="642" width="98" height="20" rx="10" fill="#d97706"/>
+<text x="749" y="656" text-anchor="middle" font-family="monospace" font-size="10" fill="#ffffff">TIM3 ②</text>
+<text x="228" y="664" font-family="sans-serif" font-size="12" font-weight="700" fill="#1a1a1a">4. ECHO edges trigger EXTI → Sensor_EXTI_Callback()</text>
+<text x="228" y="686" font-family="monospace" font-size="11" fill="#1a1a1a">reads TIM3-&gt;CNT on the rising edge, and again on the falling edge</text>
+<text x="228" y="706" font-family="sans-serif" font-size="10" fill="#777777">SAME TIM3 counter as step 2 — this is the "shared" part</text>
+
+<line x1="500" y1="724" x2="500" y2="752" stroke="#1a1a1a" stroke-width="1.5"/>
+<polygon points="500,752 495,742 505,742" fill="#1a1a1a"/>
+
+<!-- S5 -->
+<rect x="200" y="762" width="8" height="90" fill="#9ca3af"/>
+<rect x="208" y="762" width="592" height="90" fill="#f8f9fb" stroke="#cccccc" stroke-width="1"/>
+<rect x="700" y="770" width="98" height="20" rx="10" fill="#9ca3af"/>
+<text x="749" y="784" text-anchor="middle" font-family="monospace" font-size="10" fill="#ffffff">sensor.c</text>
+<text x="228" y="792" font-family="sans-serif" font-size="12" font-weight="700" fill="#1a1a1a">5. sensor.c computes the distance from those two timestamps</text>
+<text x="228" y="814" font-family="monospace" font-size="11" fill="#1a1a1a">distance_cm = 0.017 × (echo_end − echo_start)</text>
+<text x="228" y="834" font-family="sans-serif" font-size="10" fill="#777777">stored inside sensor.c, ready for main.c to read whenever it wants</text>
+
+<line x1="500" y1="852" x2="500" y2="880" stroke="#1a1a1a" stroke-width="1.5"/>
+<polygon points="500,880 495,870 505,870" fill="#1a1a1a"/>
+
+<!-- S6 -->
+<rect x="200" y="890" width="8" height="90" fill="#7c3aed"/>
+<rect x="208" y="890" width="592" height="90" fill="#f8f9fb" stroke="#cccccc" stroke-width="1"/>
+<rect x="700" y="898" width="98" height="20" rx="10" fill="#7c3aed"/>
+<text x="749" y="912" text-anchor="middle" font-family="monospace" font-size="10" fill="#ffffff">main.c</text>
+<text x="228" y="920" font-family="sans-serif" font-size="12" font-weight="700" fill="#1a1a1a">6. main.c reads the distance and works out the brightness</text>
+<text x="228" y="942" font-family="monospace" font-size="11" fill="#1a1a1a">distance_cm = Sensor_GetDistanceCm();  duty = f(distance_cm)</text>
+<text x="228" y="962" font-family="sans-serif" font-size="10" fill="#777777">this LED math lives entirely in main.c, sensor.c never sees it</text>
+
+<line x1="500" y1="980" x2="500" y2="1008" stroke="#1a1a1a" stroke-width="1.5"/>
+<polygon points="500,1008 495,998 505,998" fill="#1a1a1a"/>
+
+<!-- S7 -->
+<rect x="200" y="1018" width="8" height="90" fill="#7c3aed"/>
+<rect x="208" y="1018" width="592" height="90" fill="#f8f9fb" stroke="#cccccc" stroke-width="1"/>
+<rect x="700" y="1026" width="98" height="20" rx="10" fill="#7c3aed"/>
+<text x="749" y="1040" text-anchor="middle" font-family="monospace" font-size="10" fill="#ffffff">TIM4</text>
+<text x="228" y="1048" font-family="sans-serif" font-size="12" font-weight="700" fill="#1a1a1a">7. main.c writes duty into TIM4 — hardware takes it from there</text>
+<text x="228" y="1070" font-family="monospace" font-size="11" fill="#1a1a1a">__HAL_TIM_SET_COMPARE(&amp;htim4, CH1, duty)</text>
+<text x="228" y="1090" font-family="sans-serif" font-size="10" fill="#777777">TIM4 then outputs 1kHz PWM continuously until the next update</text>
+
+<!-- loop-back arrow -->
+<path d="M 800,1063 C 900,1063 900,285 800,285" fill="none" stroke="#2f6fed" stroke-width="1.5" stroke-dasharray="5 4"/>
+<polygon points="800,285 810,281 810,289" fill="#2f6fed"/>
+<text x="905" y="675" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#2f6fed" transform="rotate(90 905 675)">whole cycle repeats every 60ms (next TIM6 Update IT)</text>
+
+<!-- TIM3 shared-use side link between step 2 and step 4 -->
+<line x1="180" y1="422" x2="180" y2="678" stroke="#d97706" stroke-width="1.5" stroke-dasharray="4 3"/>
+<line x1="180" y1="422" x2="200" y2="422" stroke="#d97706" stroke-width="1.5" stroke-dasharray="4 3"/>
+<line x1="180" y1="678" x2="200" y2="678" stroke="#d97706" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="172" y="550" text-anchor="middle" font-family="sans-serif" font-size="9.5" fill="#d97706" transform="rotate(-90 172 550)">same TIM3 counter, reused</text>
+
+<!-- ============ legend ============ -->
+<line x1="60" y1="1150" x2="990" y2="1150" stroke="#cccccc" stroke-width="1"/>
+<rect x="90" y="1175" width="18" height="14" fill="#2f6fed"/>
+<text x="116" y="1187" font-family="sans-serif" font-size="11.5" fill="#1a1a1a">TIM6 — schedules WHEN to measure</text>
+<rect x="440" y="1175" width="18" height="14" fill="#d97706"/>
+<text x="466" y="1187" font-family="sans-serif" font-size="11.5" fill="#1a1a1a">TIM3 — measures HOW LONG (used twice)</text>
+<rect x="800" y="1175" width="18" height="14" fill="#7c3aed"/>
+<text x="826" y="1187" font-family="sans-serif" font-size="11.5" fill="#1a1a1a">TIM4 — outputs the RESULT</text>
+</svg>

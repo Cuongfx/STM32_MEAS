@@ -1,0 +1,79 @@
+<svg width="680" height="600" viewBox="0 0 680 600" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Wiring diagram for the HC-SR04 timer/interrupt distance LED project</title>
+<desc>Nucleo-F446RE powers an HC-SR04 ultrasonic sensor from 5V. TRIG is driven directly from PB0. ECHO is a 5V signal, so it is dropped to about 3.3V through a 1k/2k resistor divider before reaching PA1. An LED with a series resistor is driven from PB6 (TIM4_CH1 PWM), with its cathode jogging right before dropping to the shared GND bus. The sensor's Gnd pin runs straight down to the same bus.</desc>
+<rect width="680" height="600" fill="#ffffff"/>
+
+<!-- Nucleo board -->
+<rect x="40" y="40" width="180" height="460" rx="10" fill="#f5f5f2" stroke="#1a1a1a" stroke-width="1.5"/>
+<text x="130" y="70" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="700" fill="#1a1a1a">Nucleo-F446RE</text>
+
+<!-- 5V -->
+<text x="225" y="95" font-family="sans-serif" font-size="13" font-weight="700" fill="#1a1a1a">5V</text>
+<line x1="220" y1="100" x2="400" y2="100" stroke="#1a1a1a" stroke-width="2"/>
+
+<!-- PB0 -> Trig -->
+<text x="225" y="175" font-family="sans-serif" font-size="13" font-weight="700" fill="#1a1a1a">PB0</text>
+<line x1="220" y1="180" x2="400" y2="180" stroke="#1a1a1a" stroke-width="2"/>
+
+<!-- PA1 -> divider tap -->
+<text x="225" y="345" font-family="sans-serif" font-size="13" font-weight="700" fill="#c0392b">PA1 (ECHO, ~3.3V)</text>
+<line x1="220" y1="350" x2="460" y2="350" stroke="#c0392b" stroke-width="2.5"/>
+
+<!-- PB6 -> LED -->
+<text x="225" y="455" font-family="sans-serif" font-size="13" font-weight="700" fill="#1a1a1a">PB6</text>
+<text x="225" y="470" font-family="sans-serif" font-size="10" fill="#555555">TIM4_CH1 PWM</text>
+<line x1="220" y1="460" x2="300" y2="460" stroke="#1a1a1a" stroke-width="2"/>
+
+<!-- Nucleo GND pin down to bus -->
+<line x1="100" y1="500" x2="100" y2="530" stroke="#1a1a1a" stroke-width="2"/>
+
+<!-- HC-SR04 body: compact, no wasted internal space -->
+<rect x="400" y="70" width="200" height="190" rx="8" fill="#e8f0fe" stroke="#1a1a1a" stroke-width="1.5"/>
+<text x="500" y="100" text-anchor="middle" font-family="sans-serif" font-size="14" font-weight="700" fill="#1a1a1a">HC-SR04</text>
+<text x="500" y="135" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555555">VCC</text>
+<text x="500" y="180" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555555">Trig</text>
+<text x="460" y="235" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555555">Echo</text>
+<text x="560" y="235" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555555">Gnd</text>
+
+<!-- Echo pin exits bottom, into the divider -->
+<line x1="460" y1="260" x2="460" y2="290" stroke="#1a1a1a" stroke-width="2"/>
+<text x="470" y="278" font-family="sans-serif" font-size="10" fill="#555555">5V logic</text>
+
+<!-- Gnd pin: straight down to the bus, right next to the divider so there's no bare empty stretch -->
+<line x1="560" y1="260" x2="560" y2="530" stroke="#1a1a1a" stroke-width="2"/>
+
+<!-- Voltage divider: R1 (label sits in the open space to the left, clear of every wire) -->
+<rect x="445" y="290" width="30" height="50" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="435" y="320" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">R1 = 1kΩ</text>
+<line x1="460" y1="340" x2="460" y2="350" stroke="#1a1a1a" stroke-width="2"/>
+
+<!-- tap node -->
+<circle cx="460" cy="350" r="4" fill="#c0392b"/>
+<line x1="460" y1="350" x2="460" y2="360" stroke="#1a1a1a" stroke-width="2"/>
+
+<!-- R2 -->
+<rect x="445" y="360" width="30" height="55" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="435" y="392" text-anchor="end" font-family="sans-serif" font-size="12" fill="#1a1a1a">R2 = 2kΩ</text>
+<line x1="460" y1="415" x2="460" y2="530" stroke="#1a1a1a" stroke-width="2"/>
+
+<!-- LED branch -->
+<rect x="300" y="450" width="55" height="20" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="327" y="443" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#1a1a1a">R 330Ω</text>
+<line x1="355" y1="460" x2="400" y2="460" stroke="#1a1a1a" stroke-width="2"/>
+
+<polygon points="400,446 400,474 428,460" fill="#f5a623" stroke="#8a5a00" stroke-width="1.5"/>
+<line x1="428" y1="453" x2="428" y2="467" stroke="#8a5a00" stroke-width="3"/>
+
+<!-- cathode jogs a short step right, then drops straight to the bus — stays left of the R1/R2 column, no crossing -->
+<line x1="428" y1="460" x2="440" y2="460" stroke="#1a1a1a" stroke-width="2"/>
+<line x1="440" y1="460" x2="440" y2="530" stroke="#1a1a1a" stroke-width="2"/>
+<text x="395" y="505" text-anchor="middle" font-family="sans-serif" font-size="12" font-weight="700" fill="#1a1a1a">LEDY</text>
+
+<!-- shared GND bus -->
+<line x1="100" y1="530" x2="560" y2="530" stroke="#1a1a1a" stroke-width="2.5"/>
+<circle cx="100" cy="530" r="4" fill="#1a1a1a"/>
+<circle cx="440" cy="530" r="4" fill="#1a1a1a"/>
+<circle cx="460" cy="530" r="4" fill="#1a1a1a"/>
+<circle cx="560" cy="530" r="4" fill="#1a1a1a"/>
+<text x="60" y="558" font-family="sans-serif" font-size="13" font-weight="700" fill="#1a1a1a">GND</text>
+</svg>
