@@ -2,7 +2,6 @@
 
 **Board:** Nucleo-F446RE (STM32F446RETx)
 **IDE:** STM32CubeIDE (GCC / make)
-**Reference material:** `[STM32 Cơ bản] Buổi 5 Timer.pdf` (timer base/prescaler theory, `delay_us()` via timer, HC-SR04 interfacing)
 
 ## What this project is about
 
@@ -38,6 +37,22 @@ The sensor itself never triggers on its own — it is entirely passive/reactive.
 - **TIM6 decides WHEN to measure.** It drives no pin — its only job is an Update interrupt every 60ms, which calls `Sensor_Trigger()`. HC-SR04 needs ≥60ms between triggers so the previous echo has fully died out before the next one; this is what enforces that pacing.
 - **TIM3 measures HOW LONG.** It's a free-running counter, started once and never reset, reused twice per cycle: once by `delay_us()` to time the 10µs `Trig` pulse, and again by the EXTI callback to timestamp both edges of `Echo`. Both uses just *read* the same continuously-running `CNT` register at different moments and take the difference — nothing about TIM3 itself changes between the two uses.
 - **TIM4 outputs the RESULT.** It has no idea a sensor exists — it only receives a `duty` value once per cycle and then free-runs the 1kHz PWM in hardware until the next update.
+
+## Wiring
+
+![Wiring diagram](wiring_diagram.svg)
+
+| Signal | Nucleo pin | Notes |
+|---|---|---|
+| HC-SR04 `VCC` | 5V | |
+| HC-SR04 `GND` | GND | |
+| HC-SR04 `Trig` | PB0 (labeled **A3** on the Arduino header) | Direct connection — the sensor reads a 3.3V HIGH from the Nucleo fine |
+| HC-SR04 `Echo` | PA1 (labeled **A1**), through a **1kΩ/2kΩ resistor divider** | See below — do **not** connect Echo straight to PA1 |
+| LEDY (PWM) | PB6 (labeled **D10**), `TIM4_CH1` | Through a ~330Ω series resistor to GND |
+
+**Double-check board silkscreen labels against the schematic pin, not just the letter/number.** On the Nucleo-F446RE Arduino header, `A0` = PA0 and `A3` = PB0 — easy to grab the wrong one since both sit in the analog header row. `Trig` must land on **A3**, not A0.
+
+**Echo needs a voltage divider.** The HC-SR04 runs its logic at 5V, so `Echo` swings 0–5V — feeding that straight into a 3.3V STM32 GPIO risks exceeding its input tolerance. Build a simple divider: `Echo → R1 (1kΩ) → node → R2 (2kΩ) → GND`, and tap `PA1` off the middle node. That divides the 5V signal down to `5V × 2kΩ/(1kΩ+2kΩ) ≈ 3.3V`, which is safe for PA1.
 
 ## CubeMX setup & code generation
 
@@ -213,22 +228,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   }
 }
 ```
-
-## Wiring
-
-![Wiring diagram](wiring_diagram.svg)
-
-| Signal | Nucleo pin | Notes |
-|---|---|---|
-| HC-SR04 `VCC` | 5V | |
-| HC-SR04 `GND` | GND | |
-| HC-SR04 `Trig` | PB0 (labeled **A3** on the Arduino header) | Direct connection — the sensor reads a 3.3V HIGH from the Nucleo fine |
-| HC-SR04 `Echo` | PA1 (labeled **A1**), through a **1kΩ/2kΩ resistor divider** | See below — do **not** connect Echo straight to PA1 |
-| LEDY (PWM) | PB6 (labeled **D10**), `TIM4_CH1` | Through a ~330Ω series resistor to GND |
-
-**Double-check board silkscreen labels against the schematic pin, not just the letter/number.** On the Nucleo-F446RE Arduino header, `A0` = PA0 and `A3` = PB0 — easy to grab the wrong one since both sit in the analog header row. `Trig` must land on **A3**, not A0.
-
-**Echo needs a voltage divider.** The HC-SR04 runs its logic at 5V, so `Echo` swings 0–5V — feeding that straight into a 3.3V STM32 GPIO risks exceeding its input tolerance. Build a simple divider: `Echo → R1 (1kΩ) → node → R2 (2kΩ) → GND`, and tap `PA1` off the middle node. That divides the 5V signal down to `5V × 2kΩ/(1kΩ+2kΩ) ≈ 3.3V`, which is safe for PA1.
 
 ## Debugging with Live Expressions
 
