@@ -21,6 +21,7 @@ Each project is self-contained: its own STM32CubeIDE project (`.project`/`.cproj
 | 4.2 | [4_2_Multi_ADC_LED](4_2_Multi_ADC_LED) | True multi-channel ADC using **hardware scan mode + DMA** — a potentiometer and an LDR read on the same ADC simultaneously, each driving its own LED's brightness independently |
 | 5 | [5_Timer_Interrupt](5_Timer_Interrupt) | HC-SR04 ultrasonic distance sensor driving LED brightness — a **free-running timer (TIM3)** shared between `delay_us()` and Echo pulse timestamping, a **60ms Update interrupt (TIM6)** scheduling each ranging cycle, and **TIM4 PWM** for brightness; sensor logic isolated in its own `lib/sensor.c` |
 | 6.1 | [6_1_UART_HELLO_WORLD](6_1_UART_HELLO_WORLD) | Talking to a PC over **UART** through a CH340G USB-to-serial bridge — blocking `HAL_UART_Transmit()` for output, **interrupt-driven receive** (`HAL_UART_Receive_IT` + `HAL_UART_RxCpltCallback`) for input, and a `volatile` flag that lets typed commands pause and resume the counting loop without ever blocking it |
+| 6.2 | [6_2_UART_Control_LED](6_2_UART_Control_LED) | Controlling the on-board LED from the keyboard over **UART** — `a` turns it on, `b` turns it off, anything else gets a warning. The same interrupt-driven receive as 6.1, but packaged as a reusable **`uart_led` library** where the interrupt only leaves a `volatile` flag and a one-byte mailbox, and the main loop does the switching and replies |
 
 ## Folder structure (general)
 
@@ -34,7 +35,8 @@ STM32_F446RE/
 ├── 4_1_ADC_LED/                 - project 4.1
 ├── 4_2_Multi_ADC_LED/           - project 4.2
 ├── 5_Timer_Interrupt/           - project 5
-└── 6_1_UART_HELLO_WORLD/        - project 6.1
+├── 6_1_UART_HELLO_WORLD/        - project 6.1
+└── 6_2_UART_Control_LED/        - project 6.2
 
 # each numbered project folder follows the same internal layout:
 <project>/
