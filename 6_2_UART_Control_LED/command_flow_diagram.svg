@@ -1,0 +1,103 @@
+<svg width="1000" height="600" viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>From keystroke to LED: the interrupt side and the main-loop side</title>
+<desc>Top lane, the interrupt side: the PC sends the letter 'a' through the CH340G module to USART1 on pin PA10, which raises the RXNE flag, and the interrupt runs UART_LED_RxCallback, which stores the byte in rx_cmd, sets rx_ready to 1 and re-arms reception. Those two shared volatile variables are the hand-off. Bottom lane, the main-loop side: UART_LED_Process notices rx_ready, copies rx_cmd into a local variable, clears the flag and branches with a switch. The letter 'a' turns LD2 on and replies LED ON, the letter 'b' turns LD2 off and replies LED OFF, and any other character produces the warning message.</desc>
+<rect width="1000" height="600" fill="#ffffff"/>
+
+<defs>
+  <marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="#555555" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+  <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="#c0392b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+
+<text x="500" y="30" text-anchor="middle" font-family="sans-serif" font-size="16" font-weight="700" fill="#1a1a1a">From keystroke to LED</text>
+<text x="500" y="52" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#555555">The interrupt only leaves a note; the main loop does the actual work</text>
+
+<!-- ============ lane A: interrupt side ============ -->
+<rect x="30" y="72" width="940" height="153" rx="10" fill="#fdecea" stroke="#c0392b" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="46" y="92" font-family="sans-serif" font-size="11.5" font-weight="700" fill="#c0392b">INTERRUPT SIDE — a few microseconds, only when a byte arrives</text>
+
+<rect x="50" y="108" width="170" height="92" rx="8" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.5"/>
+<text x="135" y="134" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#1a1a1a">PC (Hercules)</text>
+<text x="135" y="154" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#1a1a1a">you type  a  and Send</text>
+<text x="135" y="172" text-anchor="middle" font-family="monospace" font-size="10.5" fill="#555555">byte 0x61 = 97</text>
+
+<line x1="220" y1="154" x2="258" y2="154" stroke="#555555" stroke-width="2" marker-end="url(#ag)"/>
+
+<rect x="260" y="108" width="170" height="92" rx="8" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.5"/>
+<text x="345" y="134" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#1a1a1a">CH340G</text>
+<text x="345" y="154" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#1a1a1a">USB → UART voltage levels</text>
+<text x="345" y="172" text-anchor="middle" font-family="monospace" font-size="10.5" fill="#555555">TXD pin</text>
+
+<line x1="430" y1="154" x2="468" y2="154" stroke="#555555" stroke-width="2" marker-end="url(#ag)"/>
+
+<rect x="470" y="108" width="170" height="92" rx="8" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.5"/>
+<text x="555" y="134" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#1a1a1a">USART1 on PA10</text>
+<text x="555" y="154" text-anchor="middle" font-family="sans-serif" font-size="10.5" fill="#1a1a1a">shifts the 10 bits in</text>
+<text x="555" y="172" text-anchor="middle" font-family="monospace" font-size="10.5" fill="#c0392b">RXNE raised → IRQ</text>
+
+<line x1="640" y1="154" x2="663" y2="154" stroke="#c0392b" stroke-width="2" marker-end="url(#ar)"/>
+
+<rect x="665" y="108" width="280" height="92" rx="8" fill="#ffffff" stroke="#c0392b" stroke-width="1.5"/>
+<text x="805" y="130" text-anchor="middle" font-family="monospace" font-size="11.5" font-weight="700" fill="#1a1a1a">UART_LED_RxCallback()</text>
+<text x="805" y="150" text-anchor="middle" font-family="monospace" font-size="10.5" fill="#1a1a1a">rx_cmd   = rx_byte;</text>
+<text x="805" y="166" text-anchor="middle" font-family="monospace" font-size="10.5" fill="#1a1a1a">rx_ready = 1;</text>
+<text x="805" y="184" text-anchor="middle" font-family="monospace" font-size="10.5" fill="#1a1a1a">HAL_UART_Receive_IT(...)  re-arm</text>
+
+<!-- ============ hand-off ============ -->
+<line x1="805" y1="200" x2="805" y2="250" stroke="#c0392b" stroke-width="2" marker-end="url(#ar)"/>
+
+<rect x="665" y="252" width="280" height="58" rx="8" fill="#fff4e5" stroke="#d97706" stroke-width="1.5"/>
+<text x="805" y="274" text-anchor="middle" font-family="sans-serif" font-size="11.5" font-weight="700" fill="#d97706">shared memory (volatile)</text>
+<text x="805" y="294" text-anchor="middle" font-family="monospace" font-size="11" fill="#1a1a1a">rx_cmd = 'a'     rx_ready = 1</text>
+
+<line x1="805" y1="310" x2="805" y2="360" stroke="#555555" stroke-width="2" marker-end="url(#ag)"/>
+
+<rect x="50" y="252" width="580" height="58" rx="8" fill="#fff4e5" stroke="#d97706" stroke-width="1.5"/>
+<text x="66" y="274" font-family="sans-serif" font-size="11.5" font-weight="700" fill="#d97706">Why two sides?</text>
+<text x="66" y="293" font-family="sans-serif" font-size="10.5" fill="#1a1a1a">Sending a reply takes about 1–5 ms. Inside the interrupt that would block every other interrupt, so it only leaves a note.</text>
+
+<!-- ============ lane B: main loop side ============ -->
+<rect x="30" y="335" width="940" height="245" rx="10" fill="#f8f9fb" stroke="#2f6fed" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="46" y="355" font-family="sans-serif" font-size="11.5" font-weight="700" fill="#2f6fed">MAIN-LOOP SIDE — while(1) calls UART_LED_Process() millions of times a second</text>
+
+<rect x="665" y="362" width="280" height="76" rx="8" fill="#ffffff" stroke="#2f6fed" stroke-width="1.5"/>
+<text x="805" y="383" text-anchor="middle" font-family="monospace" font-size="11.5" font-weight="700" fill="#1a1a1a">UART_LED_Process()</text>
+<text x="805" y="402" text-anchor="middle" font-family="monospace" font-size="10.5" fill="#1a1a1a">if (!rx_ready) return;</text>
+<text x="805" y="418" text-anchor="middle" font-family="monospace" font-size="10.5" fill="#1a1a1a">cmd = rx_cmd;  rx_ready = 0;</text>
+<text x="805" y="432" text-anchor="middle" font-family="monospace" font-size="10.5" fill="#1a1a1a">switch (cmd) { ... }</text>
+
+<rect x="50" y="368" width="580" height="62" rx="8" fill="#ffffff" stroke="#cccccc" stroke-width="1.2"/>
+<text x="66" y="390" font-family="sans-serif" font-size="11.5" font-weight="700" fill="#1a1a1a">Copy first, clear the flag second</text>
+<text x="66" y="410" font-family="sans-serif" font-size="10.5" fill="#1a1a1a">cmd is a local copy. A new byte may overwrite rx_cmd while the reply is still being sent;</text>
+<text x="66" y="424" font-family="sans-serif" font-size="10.5" fill="#1a1a1a">the copy keeps the command being handled intact.</text>
+
+<!-- ============ switch branches ============ -->
+<line x1="805" y1="438" x2="805" y2="470" stroke="#555555" stroke-width="2"/>
+<line x1="195" y1="470" x2="805" y2="470" stroke="#555555" stroke-width="2"/>
+<line x1="195" y1="470" x2="195" y2="494" stroke="#555555" stroke-width="2" marker-end="url(#ag)"/>
+<line x1="500" y1="470" x2="500" y2="494" stroke="#555555" stroke-width="2" marker-end="url(#ag)"/>
+<line x1="805" y1="470" x2="805" y2="494" stroke="#555555" stroke-width="2" marker-end="url(#ag)"/>
+
+<text x="205" y="464" font-family="monospace" font-size="11" fill="#555555">case 'a'</text>
+<text x="510" y="464" font-family="monospace" font-size="11" fill="#555555">case 'b'</text>
+<text x="700" y="464" font-family="monospace" font-size="11" fill="#555555">default</text>
+
+<rect x="50" y="496" width="290" height="72" rx="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+<text x="195" y="520" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#2e7d32">LED on</text>
+<text x="195" y="540" text-anchor="middle" font-family="monospace" font-size="10.5" fill="#1a1a1a">PA5 = HIGH → LD2 lights</text>
+<text x="195" y="556" text-anchor="middle" font-family="monospace" font-size="10.5" fill="#1a1a1a">reply: "LED ON"</text>
+
+<rect x="355" y="496" width="290" height="72" rx="8" fill="#f5f5f2" stroke="#1a1a1a" stroke-width="1.5"/>
+<text x="500" y="520" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#1a1a1a">LED off</text>
+<text x="500" y="540" text-anchor="middle" font-family="monospace" font-size="10.5" fill="#1a1a1a">PA5 = LOW → LD2 dark</text>
+<text x="500" y="556" text-anchor="middle" font-family="monospace" font-size="10.5" fill="#1a1a1a">reply: "LED OFF"</text>
+
+<rect x="660" y="496" width="290" height="72" rx="8" fill="#fdecea" stroke="#c0392b" stroke-width="1.5"/>
+<text x="805" y="518" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="700" fill="#c0392b">Anything else</text>
+<text x="805" y="536" text-anchor="middle" font-family="monospace" font-size="10" fill="#1a1a1a">LED unchanged, reply:</text>
+<text x="805" y="551" text-anchor="middle" font-family="monospace" font-size="9" fill="#1a1a1a">"Please choose a to turn on LED</text>
+<text x="805" y="563" text-anchor="middle" font-family="monospace" font-size="9" fill="#1a1a1a">or b to turn off LED"</text>
+</svg>
